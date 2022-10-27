@@ -22,7 +22,7 @@
     <Text>Working with Excel</Text>
     <Description>Working with Excel</Description>
     <Assembly>RevitAddinAcademy.dll</Assembly>
-    <FullClassName>RevitAddinAcademy.session02Challenge</FullClassName>
+    <FullClassName>RevitAddinAcademy.Session02Challenge</FullClassName>
     <ClientId>8EFCA47C-FFC1-43D2-877F-DD737FE2B897</ClientId>
     <VendorId>com.typepad.thebuildingcoder</VendorId>
     <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>

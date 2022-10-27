@@ -13,7 +13,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 namespace RevitAddinAcademy
 {
     [Transaction(TransactionMode.Manual)]
-    public class session02Challenge : IExternalCommand
+    public class Session02Challenge : IExternalCommand
     {
         public Result Execute(
           ExternalCommandData commandData,
@@ -27,54 +27,79 @@ namespace RevitAddinAcademy
 
             string excelFile = @"C:\Visual Studio Files\My_Revit_Add-in_Training\02_Working_With_Excel\Revit_Add-in_Academy_Challenge_2_file\Revit Add-in Academy_Session 2 Challenge.xlsx";
 
-            Excel.Application excelApp = new Excel.Application();
-            Excel.Workbook excelWb = excelApp.Workbooks.Open(excelFile);
-            Excel.Worksheet excelWs = excelWb.Worksheets.Item[1];
-
-            Excel.Range excelRng = excelWs.UsedRange;
-            int rowCount = excelRng.Rows.Count;
-
-            // Do stuff in Excel
-            List<string[]> dataList = new List<string[]>();
-
-            for (int i = 1; i <= rowCount; i++)
+            try
             {
-                Excel.Range cell1 = excelWs.Cells[i, 1];
-                Excel.Range cell2 = excelWs.Cells[i, 2];
-                Excel.Range cell3 = excelWs.Cells[i, 3];
+                // Open excel
+                Excel.Application excelApp = new Excel.Application();
+                Excel.Workbook excelWb = excelApp.Workbooks.Open(excelFile);
+                // Get the worksheets
+                Excel.Worksheet excelWs1 = excelWb.Worksheets.Item[1];
+                Excel.Worksheet excelWs2 = excelWb.Worksheets.Item[2];
+                // Get the Range of cells in each worksheet
+                Excel.Range excelRng1 = excelWs1.UsedRange;
+                Excel.Range excelRng2 = excelWs2.UsedRange;
+                // Get the cound of rows in each sheet
+                int rowCount1 = excelRng1.Rows.Count;
+                int rowCount2 = excelRng2.Rows.Count;
 
-                string data1 = cell1.Value.ToString();
-                string data2 = cell2.Value.ToString();
-                string data3 = cell3.Value.ToString();
+                // Transaction codeblock
+                using (Transaction tx = new Transaction(doc))
+                {
+                    tx.Start("Create New Level");
 
-                string[] dataArray = new string[3];
-                dataArray[0] = data1;
-                dataArray[1] = data2;
-                dataArray[2] = data3;
+                    // Loop through sheet 1 cells
+                    for (int i = 2; i <= rowCount1; i++)
+                    {
+                        // Get current row cells data
+                        Excel.Range levelData1 = excelWs1.Cells[i, 1];
+                        Excel.Range levelData2 = excelWs1.Cells[i, 2];
 
-                dataList.Add(dataArray);
+                        // Create variables from cell values
+                        string levelName = levelData1.Value.ToString();
+                        Double levelElev = levelData2.Value;
+
+                        // create new levels with data from current excel cells stored in variables
+                        Level newLevel = Level.Create(doc, levelElev);
+                        newLevel.Name = levelName;
+                    }
+
+                    FilteredElementCollector collector = new FilteredElementCollector(doc);
+                    collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
+                    collector.WhereElementIsElementType();
+
+                    // Loop through sheet 2 cells
+                    for (int j = 2; j <= rowCount2; j++)
+                    {
+                        Excel.Range sheetData1 = excelWs2.Cells[j, 1];
+                        Excel.Range sheetData2 = excelWs2.Cells[j, 2];
+
+                        string sheetNum = sheetData1.Value.ToString();
+                        string sheetName = sheetData2.Value.ToString();
+
+                        // Create new Revit sheet from the excel data sheet
+                        ViewSheet newSheet = ViewSheet.Create(doc, collector.FirstElementId());
+                        newSheet.SheetNumber = sheetNum;
+                        newSheet.Name = sheetName;
+                    }
+
+                    tx.Commit();
+                }
+
+                excelWb.Close();
+                excelApp.Quit();
             }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print("!!!!!!!!!!!      NO GOOD    !!!!!!!!!!!!!!!!!!");
+
+                //Or
+                //> TaskDialog.Show("Error" "An error occured.")
+                //throw;
+            }
+
             
-            using (Transaction tx = new Transaction(doc))
-            {
-                tx.Start("Create New Level");
-                
-                Level curLevel = Level.Create(doc, 100);
 
-                FilteredElementCollector collector = new FilteredElementCollector(doc);
-                collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
-                collector.WhereElementIsElementType();
-
-
-                ViewSheet curSheet = ViewSheet.Create(doc, collector.FirstElementId());
-                curSheet.SheetNumber = "A10101012";
-                curSheet.Name = "MyNewSheet";
-
-                tx.Commit();
-            }
-
-            excelWb.Close();
-            excelApp.Quit();
             return Result.Succeeded;
         }
     }
