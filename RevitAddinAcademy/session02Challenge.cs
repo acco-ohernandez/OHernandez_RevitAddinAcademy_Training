@@ -27,6 +27,8 @@ namespace RevitAddinAcademy
 
             string excelFile = @"C:\Visual Studio Files\My_Revit_Add-in_Training\02_Working_With_Excel\Revit_Add-in_Academy_Challenge_2_file\Revit Add-in Academy_Session 2 Challenge.xlsx";
 
+            int levelCounter = 0;
+            int sheetCounter = 0;
             try
             {
                 // Open excel
@@ -58,9 +60,18 @@ namespace RevitAddinAcademy
                         string levelName = levelData1.Value.ToString();
                         Double levelElev = levelData2.Value;
 
-                        // create new levels with data from current excel cells stored in variables
-                        Level newLevel = Level.Create(doc, levelElev);
-                        newLevel.Name = levelName;
+                        try
+                        {
+                            // create new levels with data from current excel cells stored in variables
+                            Level newLevel = Level.Create(doc, levelElev);
+                            newLevel.Name = levelName;
+                            levelCounter++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Print("Error crating new level !!!!: " + ex.Message);
+                            //throw;
+                        }
                     }
 
                     FilteredElementCollector collector = new FilteredElementCollector(doc);
@@ -76,10 +87,19 @@ namespace RevitAddinAcademy
                         string sheetNum = sheetData1.Value.ToString();
                         string sheetName = sheetData2.Value.ToString();
 
-                        // Create new Revit sheet from the excel data sheet
-                        ViewSheet newSheet = ViewSheet.Create(doc, collector.FirstElementId());
-                        newSheet.SheetNumber = sheetNum;
-                        newSheet.Name = sheetName;
+                        try
+                        {
+                            // Create new Revit sheet from the excel data sheet
+                            ViewSheet newSheet = ViewSheet.Create(doc, collector.FirstElementId());
+                            newSheet.SheetNumber = sheetNum;
+                            newSheet.Name = sheetName;
+                            sheetCounter++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Print("Error crating sheet !!!!: " + ex.Message);
+                            //throw;
+                        }
                     }
 
                     tx.Commit();
@@ -98,7 +118,9 @@ namespace RevitAddinAcademy
                 //throw;
             }
 
-            
+            TaskDialog.Show("Complete", "Created: " + levelCounter.ToString() + " levels.");
+            TaskDialog.Show("Complete", "Created: " + sheetCounter.ToString() + " Sheets.");
+
 
             return Result.Succeeded;
         }
