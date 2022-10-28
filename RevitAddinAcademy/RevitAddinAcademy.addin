@@ -10,11 +10,11 @@
     <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
   </AddIn>
   <AddIn Type="Command">
-    <Text>FizzBuzz</Text>
-    <Description>FizzBuzz Challenge</Description>
+    <Text>Create views and sheets</Text>
+    <Description>Callenge 3</Description>
     <Assembly>RevitAddinAcademy.dll</Assembly>
-    <FullClassName>RevitAddinAcademy.Session01Challenge</FullClassName>
-    <ClientId>02F16E85-A879-442C-BAFA-0774DF2F0351</ClientId>
+    <FullClassName>RevitAddinAcademy.Session03Challenge</FullClassName>
+    <ClientId>4A133299-DDA5-458D-86B4-AFD19D8D7A9B</ClientId>
     <VendorId>com.typepad.thebuildingcoder</VendorId>
     <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
   </AddIn>
@@ -24,6 +24,15 @@
     <Assembly>RevitAddinAcademy.dll</Assembly>
     <FullClassName>RevitAddinAcademy.Session02Challenge</FullClassName>
     <ClientId>8EFCA47C-FFC1-43D2-877F-DD737FE2B897</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+  <AddIn Type="Command">
+    <Text>FizzBuzz</Text>
+    <Description>FizzBuzz Challenge</Description>
+    <Assembly>RevitAddinAcademy.dll</Assembly>
+    <FullClassName>RevitAddinAcademy.Session01Challenge</FullClassName>
+    <ClientId>02F16E85-A879-442C-BAFA-0774DF2F0351</ClientId>
     <VendorId>com.typepad.thebuildingcoder</VendorId>
     <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
   </AddIn>
