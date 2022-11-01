@@ -7,6 +7,7 @@ using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Excel = Microsoft.Office.Interop.Excel;
 using Forms = System.Windows.Forms;
 
 #endregion
@@ -29,134 +30,233 @@ namespace RevitAddinAcademy
             Forms.OpenFileDialog dialog = new Forms.OpenFileDialog();
             dialog.InitialDirectory = @"C:\";
             dialog.Multiselect = false;
-            //dialog.Multiselect = true;          //----------------------------for multiple files
-            dialog.Filter = "Revit Files | *.rvt; *.rfa";
+            dialog.Filter = "Excel files | *.xlsx; *.xls; *.xlsm | All files | *.*";
 
-            string filePath = "";
-            //string[] filePaths;                 //----------------------------for multiple files
-            
-            // Get File Path only if the user clicks OK in the ShowDialog
-            if (dialog.ShowDialog() == Forms.DialogResult.OK)
+            if (dialog.ShowDialog() != Forms.DialogResult.OK)
             {
-                filePath = dialog.FileName;
-                //filePaths = dialog.FileNames;   //----------------------------for multiple files
+                TaskDialog.Show("Error", "Please select an Excel file.");
+                return Result.Failed;
             }
 
-            Forms.FolderBrowserDialog folderDialog = new Forms.FolderBrowserDialog();
+            string excelFile = dialog.FileName;
+            int levelCounter = 0;
+            int sheetCounter = 0;
 
-            string folderPath = "";
-            if (folderDialog.ShowDialog() == Forms.DialogResult.OK)
+            try
             {
-                folderPath = folderDialog.SelectedPath;
-            }
+                // open excel
+                Excel.Application excelApp = new Excel.Application();
+                Excel.Workbook excelWb = excelApp.Workbooks.Open(excelFile);
 
-            Tuple<string, int> t1 = new Tuple<string, int>("string 1", 55);
-            Tuple<string, int> t2 = new Tuple<string, int>("string 2", 155);
+                Excel.Worksheet excelWs1 = GetExcelWorksheetByName(excelWb, "Levels");
+                Excel.Worksheet excelWs2 = GetExcelWorksheetByName(excelWb, "Sheets");
 
-            TestStruct struct1;
-            struct1.Name = "Structure 1";
-            struct1.Value = 100;
-            struct1.Value2 = 10.5;
+                List<LevelStruct> levelData = GetLevelDataFromExcel(excelWs1);
+                List<SheetStruct> sheetData = GetSheetDataFromExcel(excelWs2);
 
-            TestStruct struct2 = new TestStruct("structure 1", 10, 1004.4);
+                excelWb.Close();
+                excelApp.Quit();
 
-            List<TestStruct> structList = new List<TestStruct>();
-            structList.Add(struct1);
-
-            FilteredElementCollector collector = new FilteredElementCollector(doc);
-            collector.OfClass(typeof(ViewFamilyType));
-
-            ViewFamilyType curVFT = null;
-            ViewFamilyType curRCPVFT = null;
-            foreach (ViewFamilyType curElem in collector)
-            {
-                if (curElem.ViewFamily == ViewFamily.FloorPlan)
+                using (Transaction t = new Transaction(doc))
                 {
-                    curVFT = curElem;
-                }
-                else if (curElem.ViewFamily == ViewFamily.CeilingPlan)
-                {
-                    curRCPVFT = curElem;
-                }
-            }
+                    t.Start("Setup project");
 
-            FilteredElementCollector collector2 = new FilteredElementCollector(doc);
-            collector2.OfCategory(BuiltInCategory.OST_TitleBlocks);
-            collector2.WhereElementIsElementType();
+                    ViewFamilyType planVFT = GetViewFamilyType(doc, "plan");
+                    ViewFamilyType rcpVFT = GetViewFamilyType(doc, "rcp");
 
-            using (Transaction t = new Transaction(doc))
-            {
-                t.Start("Create Revit stuff");
-
-                Level newLevel = Level.Create(doc, 100);
-                ViewPlan curPlan = ViewPlan.Create(doc, curVFT.Id, newLevel.Id);
-                ViewPlan curRCP = ViewPlan.Create(doc, curRCPVFT.Id, newLevel.Id);
-                curRCP.Name = curRCP.Name + " RCP";
-
-                View existingView = GetViewByName(doc, "Level 1");
-
-                ViewSheet newSheet = ViewSheet.Create(doc, collector2.FirstElementId());
-
-                if (existingView != null)
-                {
-                    Viewport newVP = Viewport.Create(doc, newSheet.Id, curPlan.Id, new XYZ(0, 0, 0));
-                    TaskDialog.Show("View Created", "Created: " + newVP.Name);
-                }
-                else
-                {
-                    TaskDialog.Show("Error", "Could not find view");
-                }
-
-
-                newSheet.Name = "TEST SHEET";
-                newSheet.SheetNumber = "A10010101";
-
-                string paramValue = "";
-                foreach (Parameter curParam in newSheet.Parameters)
-                {
-                    if (curParam.Definition.Name == "Drawn By")
+                    foreach (LevelStruct curLevel in levelData)
                     {
-                        curParam.Set("ORHernandez");
+                        Level newLevel = Level.Create(doc, curLevel.LevelElev);
+                        newLevel.Name = curLevel.LevelName;
+                        levelCounter++;
+
+                        ViewPlan curFloorPlan = ViewPlan.Create(doc, planVFT.Id, newLevel.Id);
+                        ViewPlan curRCP = ViewPlan.Create(doc, rcpVFT.Id, newLevel.Id);
+
+                        curRCP.Name = curRCP.Name + " RCP";
                     }
+
+                    FilteredElementCollector collector = GetTitleblock(doc);
+
+                    foreach (SheetStruct curSheet in sheetData)
+                    {
+                        ViewSheet newSheet = ViewSheet.Create(doc, collector.FirstElementId());
+
+                        newSheet.SheetNumber = curSheet.SheetNumber;
+                        newSheet.Name = curSheet.SheetName;
+
+                        SetParameterValue(newSheet, "Drawn By", curSheet.DrawnBy);
+                        SetParameterValue(newSheet, "Checked By", curSheet.CheckedBy);
+
+                        View curView = GetViewByName(doc, curSheet.SheetView);
+
+                        if (curView != null)
+                        {
+                            Viewport curVP = Viewport.Create(doc, newSheet.Id, curView.Id, new XYZ(0.5, 0.5, 0));
+                        }
+
+                        sheetCounter++;
+                    }
+
+                    t.Commit();
                 }
 
-                t.Commit();
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
             }
 
+            TaskDialog.Show("Complete", "Created " + levelCounter.ToString() + " levels.");
+            TaskDialog.Show("Complete", "Created " + sheetCounter.ToString() + " sheets.");
 
             return Result.Succeeded;
         }
 
-        internal View GetViewByName(Document doc, string viewName)
+        private static FilteredElementCollector GetTitleblock(Document doc)
         {
             FilteredElementCollector collector = new FilteredElementCollector(doc);
-            collector.OfClass(typeof(View));
+            collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
+            collector.WhereElementIsElementType();
+            return collector;
+        }
+
+        private View GetViewByName(Document doc, string viewName)
+        {
+            FilteredElementCollector collector = new FilteredElementCollector(doc);
+            collector.OfCategory(BuiltInCategory.OST_Views);
 
             foreach (View curView in collector)
             {
                 if (curView.Name == viewName)
-                {
                     return curView;
+            }
+
+            return null;
+        }
+
+        private void SetParameterValue(ViewSheet newSheet, string paramName, string paramValue)
+        {
+            foreach (Parameter curParam in newSheet.Parameters)
+            {
+                if (curParam.Definition.Name == paramName)
+                {
+                    curParam.Set(paramValue);
+                }
+            }
+        }
+
+        private ViewFamilyType GetViewFamilyType(Document doc, string type)
+        {
+            FilteredElementCollector collector = new FilteredElementCollector(doc);
+            collector.OfClass(typeof(ViewFamilyType));
+
+            foreach (ViewFamilyType vft in collector)
+            {
+                if (vft.ViewFamily == ViewFamily.FloorPlan && type == "plan")
+                {
+                    return vft;
+                }
+                else if (vft.ViewFamily == ViewFamily.CeilingPlan && type == "rcp")
+                {
+                    return vft;
                 }
             }
 
             return null;
         }
 
-        internal struct TestStruct
+        private List<SheetStruct> GetSheetDataFromExcel(Excel.Worksheet excelWs)
         {
-            public string Name;
-            public int Value;
-            public double Value2;
+            List<SheetStruct> returnList = new List<SheetStruct>();
+            Excel.Range excelRng1 = excelWs.UsedRange;
 
-            public TestStruct(string name, int value, double value2)
+            int rowCount1 = excelRng1.Rows.Count;
+
+            for (int i = 2; i <= rowCount1; i++)
             {
-                Name = name;
-                Value = value;
-                Value2 = value2;
+                Excel.Range data1 = excelWs.Cells[i, 1];
+                Excel.Range data2 = excelWs.Cells[i, 2];
+                Excel.Range data3 = excelWs.Cells[i, 3];
+                Excel.Range data4 = excelWs.Cells[i, 4];
+                Excel.Range data5 = excelWs.Cells[i, 5];
+
+                SheetStruct curSheet = new SheetStruct();
+                curSheet.SheetNumber = data1.Value.ToString();
+                curSheet.SheetName = data2.Value.ToString();
+                curSheet.SheetView = data3.Value.ToString();
+                curSheet.DrawnBy = data4.Value;
+                curSheet.CheckedBy = data5.Value;
+
+                returnList.Add(curSheet);
+            }
+
+            return returnList;
+        }
+
+        private List<LevelStruct> GetLevelDataFromExcel(Excel.Worksheet excelWs1)
+        {
+            List<LevelStruct> returnList = new List<LevelStruct>();
+            Excel.Range excelRng1 = excelWs1.UsedRange;
+
+            int rowCount1 = excelRng1.Rows.Count;
+
+            for (int i = 2; i <= rowCount1; i++)
+            {
+                Excel.Range levelData1 = excelWs1.Cells[i, 1];
+                Excel.Range levelData2 = excelWs1.Cells[i, 2];
+
+                string levelName = levelData1.Value.ToString();
+                double levelElev = levelData2.Value;
+
+                LevelStruct curLevel = new LevelStruct(levelName, levelElev);
+                returnList.Add(curLevel);
+            }
+
+            return returnList;
+        }
+
+        private Excel.Worksheet GetExcelWorksheetByName(Excel.Workbook curWb, string wsName)
+        {
+            foreach (Excel.Worksheet ws in curWb.Worksheets)
+            {
+                if (ws.Name == wsName)
+                {
+                    return ws;
+                }
+            }
+
+            return null;
+        }
+
+        private struct LevelStruct
+        {
+            public string LevelName;
+            public double LevelElev;
+
+            public LevelStruct(string name, double elev)
+            {
+                LevelName = name;
+                LevelElev = elev;
             }
         }
 
+        private struct SheetStruct
+        {
+            public string SheetNumber;
+            public string SheetName;
+            public string SheetView;
+            public string DrawnBy;
+            public string CheckedBy;
 
-    }
-}
+            public SheetStruct(string number, string name, string view, string db, string cb)
+            {
+                SheetNumber = number;
+                SheetName = name;
+                SheetView = view;
+                DrawnBy = db;
+                CheckedBy = cb;
+            }
+        }
+    }//endofClass
+}//endofNamespace
