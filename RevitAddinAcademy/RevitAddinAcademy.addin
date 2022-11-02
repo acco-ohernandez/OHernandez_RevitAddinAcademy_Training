@@ -10,6 +10,15 @@
     <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
   </AddIn>
   <AddIn Type="Command">
+    <Text>Elements From Lines</Text>
+    <Description>Some description for RevitAddinAcademy</Description>
+    <Assembly>RevitAddinAcademy.dll</Assembly>
+    <FullClassName>RevitAddinAcademy.Session04Challenge</FullClassName>
+    <ClientId>910C0455-4353-4B26-99D0-8FAD19E1C0FF</ClientId>
+    <VendorId>com.typepad.thebuildingcoder</VendorId>
+    <VendorDescription>The Building Coder, http://thebuildingcoder.typepad.com</VendorDescription>
+  </AddIn>
+  <AddIn Type="Command">
     <Text>FizzBuzz</Text>
     <Description>FizzBuzz Challenge</Description>
     <Assembly>RevitAddinAcademy.dll</Assembly>
