@@ -58,6 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
+    <Compile Include="FurnitureData.cs" />
+    <Compile Include="Session05Challenge.cs" />
     <Compile Include="Session01Challenge.cs" />
     <Compile Include="TestCode.cs" />
     <Compile Include="Session02Challenge.cs" />
