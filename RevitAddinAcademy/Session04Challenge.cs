@@ -36,26 +36,83 @@ namespace RevitAddinAcademy
             DuctType      ductType       = GetDuctTypeByName(doc, "Default");
             WallType      wallType1      = GetWallTypeByName(doc, @"Generic - 8""");
             WallType      wallType2      = GetWallTypeByName(doc, "Storefront");
-
-
-            foreach (Element element in pickList)
-            {
-                if (element is CurveElement)
-                {
-                    
-
-
-                }
-            }
+            int counter = 0;
+            int errorCounter = 0;
+            
 
             // Modify document within a transaction
-
             using (Transaction tx = new Transaction(doc))
             {
-                tx.Start("Transaction Name");
+                tx.Start("Create eleements from lines");
+                foreach (Element element in pickList)
+                {
+                    if (element is CurveElement)
+                    {
+                        CurveElement curveElement = element as CurveElement;
+                        GraphicsStyle curGs = curveElement.LineStyle as GraphicsStyle;
+                        Curve curCurve = curveElement.GeometryCurve;
+
+                        XYZ startPoint;
+                        XYZ endPoint;
+
+                        try
+                        {
+                            startPoint = curCurve.GetEndPoint(0);
+                            endPoint = curCurve.GetEndPoint(1);
+                        }
+                        catch (Exception)
+                        {
+                            Debug.Print("Error: Hey, I can't create an element using a curved curve.");
+                            startPoint = null;
+                            endPoint = null;
+                            errorCounter++;
+                        }
+
+                        try
+                        {
+                            switch (curGs.Name)
+                            {
+                                case "A-GLAZ":
+                                    Wall.Create(doc, curCurve, wallType2.Id, curLevel.Id, 20, 0, false, false);
+                                    counter++;
+                                    break;
+                                case "A-WALL":
+                                    Wall.Create(doc, curCurve, wallType1.Id, curLevel.Id, 20, 0, false, false);
+                                    counter++;
+                                    break;
+                                case "M-DUCT":
+                                    if (startPoint != null & endPoint != null)
+                                    {
+                                        Duct.Create(doc, duckSystemType.Id, ductType.Id, curLevel.Id, startPoint, endPoint);
+                                        counter++;
+                                    }
+
+                                    break;
+                                case "P-PIPE":
+                                    if (startPoint != null & endPoint != null)
+                                    {
+                                        Pipe.Create(doc, pipeSystemType.Id, pipeType.Id, curLevel.Id, startPoint, endPoint);
+                                        counter++;
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                        catch (Exception)
+                        {
+
+                            TaskDialog.Show("Error", "Can't Create element.");
+                        }
+
+                    }
+                }
                 tx.Commit();
             }
-            
+            TaskDialog.Show("Complete", "Created " + counter.ToString() + " elements.");
+            TaskDialog.Show("Error", "Could not create " + errorCounter.ToString() + " elements.");
+
             return Result.Succeeded;
         }
 
