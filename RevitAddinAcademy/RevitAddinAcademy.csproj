@@ -56,12 +56,20 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.cs" />
+    <Compile Include="frmToDo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmToDo.Designer.cs">
+      <DependentUpon>frmToDo.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -72,8 +80,13 @@
     <Compile Include="Session02Challenge.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ToDoData.cs" />
+    <Compile Include="ToDoFormCommands.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="frmToDo.resx">
+      <DependentUpon>frmToDo.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Blue_16.png" />
     <EmbeddedResource Include="Resources\Blue_32.png" />
     <EmbeddedResource Include="Resources\Green_16.png" />
