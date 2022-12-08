@@ -25,34 +25,22 @@ namespace RevitAddinAcademy
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
+            string userName = app.Username;
+            string filePath = doc.PathName;
+            string date = DateTime.Now.ToString();
+            string curAssemblyName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            string curAssemblyFullname = System.Reflection.Assembly.GetExecutingAssembly().FullName;
+            string curMethod = this.GetType().Name;
 
-            // Access current selection
+            Logger curLog = new Logger(filePath, userName);
+            Globals.curLog = curLog;
+            Globals.FilePath = filePath;
+            Globals.UserName = userName;
 
-            Selection sel = uidoc.Selection;
+            curLog.method1();
+            curLog.method2();
+            curLog.method3();
 
-            // Retrieve elements from database
-
-            FilteredElementCollector col
-              = new FilteredElementCollector(doc)
-                .WhereElementIsNotElementType()
-                .OfCategory(BuiltInCategory.INVALID)
-                .OfClass(typeof(Wall));
-
-            // Filtered element collector is iterable
-
-            foreach (Element e in col)
-            {
-                Debug.Print(e.Name);
-            }
-
-            // Modify document within a transaction
-
-            using (Transaction tx = new Transaction(doc))
-            {
-                tx.Start("Transaction Name");
-                tx.Commit();
-            }
-            
             return Result.Succeeded;
         }
     }
