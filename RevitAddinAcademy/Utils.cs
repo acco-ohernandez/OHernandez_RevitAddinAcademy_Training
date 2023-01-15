@@ -20,9 +20,9 @@ namespace RevitAddinAcademy
             {
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Globals.curLog.method3();
+                //Globals.curLog.method3(ex);
                 throw;
             }
         }

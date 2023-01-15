@@ -32,9 +32,10 @@ namespace RevitAddinAcademy
 
         }
 
-        public void method3()
+        public void method3(string assembly, string method, string error)
         {
-
+            string message = "ERROR, " + assembly + ":" + method + "," + error;
+            WriteToLog(message);
         }
 
         private void WriteToLog(string message)

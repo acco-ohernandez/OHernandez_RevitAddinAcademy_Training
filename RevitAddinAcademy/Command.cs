@@ -7,6 +7,7 @@ using Autodesk.Revit.UI.Selection;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+//using System.Windows.Forms;
 
 #endregion
 
@@ -39,9 +40,32 @@ namespace RevitAddinAcademy
 
             curLog.method1();
             curLog.method2();
-            curLog.method3();
+            try
+            {
+                ErrorMethor();
+            }
+            catch (Exception ex)
+            {
+                curLog.method3(curAssemblyName, curMethod, ex.Message);
+            }
+            
+            TaskDialog td = new TaskDialog("Log results");
+            td.MainInstruction = "Here are the log results";
+            td.MainContent = "Would you like to view the log file?";
+            td.CommonButtons = TaskDialogCommonButtons.Yes | TaskDialogCommonButtons.No;
+
+            TaskDialogResult result = td.Show();
+            if (result == TaskDialogResult.Yes)
+            {
+                Process.Start("notepad.exe",curLog.Logpath);
+            }
 
             return Result.Succeeded;
+        }
+
+        private void ErrorMethor()
+        {
+           throw new NotImplementedException();
         }
     }
 }
