@@ -55,7 +55,7 @@ namespace RevitAddinAcademy
                         // Get current row cells data
                         Excel.Range levelData1 = excelWs1.Cells[i, 1];
                         Excel.Range levelData2 = excelWs1.Cells[i, 2];
-
+                        
                         // Create variables from cell values
                         string levelName = levelData1.Value.ToString();
                         Double levelElev = levelData2.Value;
@@ -74,6 +74,7 @@ namespace RevitAddinAcademy
                         }
                     }
 
+                    
                     FilteredElementCollector collector = new FilteredElementCollector(doc);
                     collector.OfCategory(BuiltInCategory.OST_TitleBlocks);
                     collector.WhereElementIsElementType();
@@ -114,7 +115,7 @@ namespace RevitAddinAcademy
                 Debug.Print("!!!!!!!!!!!      NO GOOD    !!!!!!!!!!!!!!!!!!");
 
                 //Or
-                //> TaskDialog.Show("Error" "An error occured.")
+                TaskDialog.Show("Error", "An error occured.");
                 //throw;
             }
 
